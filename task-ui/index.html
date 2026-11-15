@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task App · NestJS</title>
+<link rel="icon" href="nestjs-logo.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --red: #E0234E; --red-dark: #C01C42; --red-soft: #FCE3E9; --red-line: #F3A9B9;
+    --bg: #FBF7F8; --bg-2: #F4EDEF; --card: #FFFFFF; --line: #EADFE2;
+    --ink: #221C24; --ink-2: #57505A; --ink-3: #776E7E;
+    --ok: #1C6438; --ok-soft: #E5F2EA; --dark: #2A2430; --dark-2: #362F3D;
+    --shadow: 0 1px 2px rgba(60,0,20,.05), 0 8px 24px rgba(60,0,20,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Be Vietnam Pro', Arial, sans-serif;
+    background-image: radial-gradient(circle at 0% 0%, #FCE3E9 0, transparent 420px), radial-gradient(circle at 100% 0%, #F4EDEF 0, transparent 380px); min-height: 100vh; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Thanh trên cùng */
+  .topbar { max-width: 1240px; margin: 0 auto; padding: 20px 16px 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand img { width: 44px; height: 42px; }
+  .brand b { font-size: 22px; font-weight: 800; } .brand b span { color: var(--red); }
+  .status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); color: var(--ink-2); }
+  .status i { width: 9px; height: 9px; border-radius: 50%; background: #B9AFBC; }
+  .status.on i { background: #2FB463; box-shadow: 0 0 0 4px #DDF4E6; } .status.off i { background: var(--red); box-shadow: 0 0 0 4px var(--red-soft); }
+  .conn { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .field { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0 0 0 12px; }
+  .field span { font-size: 12px; font-weight: 700; color: var(--ink-3); white-space: nowrap; }
+  .field input { font: 13px 'JetBrains Mono', monospace; border: 0; background: transparent; padding: 10px 12px 10px 0; width: 180px; color: var(--ink); outline: none; }
+  .field:focus-within { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-soft); }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 20px 16px 48px; display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+  @media (max-width: 960px) { .wrap { grid-template-columns: 1fr; } .conn { margin-left: 0; } }
+
+  /* Banner + thống kê */
+  .hero { background: linear-gradient(135deg, #E0234E 0%, #B81A3F 100%); color: #fff; border-radius: 24px; padding: 26px 28px; box-shadow: 0 18px 40px rgba(224,35,78,.25); position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; right: -40px; top: -40px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255,255,255,.08); }
+  .hero h1 { margin: 0; font-size: 28px; font-weight: 800; }
+  .hero p { margin: 6px 0 18px; color: #FFE1E7; font-size: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat { background: rgba(255,255,255,.14); border-radius: 16px; padding: 12px 16px; }
+  .stat b { display: block; font-size: 28px; font-weight: 800; line-height: 1.1; } .stat span { font-size: 13px; color: #FFE1E7; }
+  .bar { margin-top: 16px; height: 10px; background: rgba(255,255,255,.22); border-radius: 999px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: #fff; border-radius: 999px; transition: width .5s ease; }
+  .pct { margin-top: 6px; font-size: 13px; color: #FFE1E7; }
+  .hero-top { display: flex; align-items: flex-start; gap: 12px; position: relative; z-index: 1; }
+  .hero-top > div { flex: 1; }
+  .seed { background: #fff; color: var(--red-dark); font-weight: 700; font-size: 13px; padding: 9px 14px; border-radius: 12px; white-space: nowrap; box-shadow: 0 6px 16px rgba(80,0,20,.2); }
+  .seed:hover { background: #FFF0F3; } .seed:disabled { opacity: .6; cursor: wait; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 16px; box-shadow: var(--shadow); }
+  .add { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .add input { flex: 1; min-width: 180px; font: inherit; font-size: 15px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); color: var(--ink); outline: none; }
+  .add input:focus, .search:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-soft); background: #fff; }
+  button { font: inherit; cursor: pointer; border: 0; }
+  .btn { background: var(--red); color: #fff; font-weight: 700; padding: 13px 22px; font-size: 15px; border-radius: 14px; box-shadow: 0 6px 16px rgba(224,35,78,.3); transition: transform .1s, background .2s; }
+  .btn:hover { background: var(--red-dark); } .btn:active { transform: translateY(1px); }
+
+  .tools { display: flex; gap: 10px; align-items: center; margin: 22px 0 12px; flex-wrap: wrap; }
+  .tabs { display: flex; background: var(--bg-2); border-radius: 14px; padding: 4px; }
+  .tabs button { background: transparent; padding: 8px 16px; font-weight: 600; color: var(--ink-2); font-size: 14px; border-radius: 10px; }
+  .tabs button.on { background: var(--card); color: var(--red-dark); box-shadow: 0 1px 4px rgba(60,0,20,.12); }
+  .search { flex: 1; min-width: 160px; font: inherit; font-size: 14px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); outline: none; }
+
+  ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .task { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; box-shadow: var(--shadow); animation: pop .25s ease; transition: border-color .2s; }
+  .task:hover { border-color: var(--red-line); }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .check { width: 28px; height: 28px; flex: none; border-radius: 50%; border: 2px solid var(--red-line); background: #fff; display: grid; place-items: center; color: transparent; font-size: 15px; font-weight: 800; padding: 0; }
+  .check:hover { border-color: var(--red); }
+  .task.done .check { background: var(--red); border-color: var(--red); color: #fff; }
+  .task .body { flex: 1; min-width: 0; }
+  .task .title { font-weight: 600; font-size: 16px; word-break: break-word; cursor: text; }
+  .task.done .title { text-decoration: line-through; color: var(--ink-3); }
+  .task .desc { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+  .chips { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .chip { font: 11px 'JetBrains Mono', monospace; color: var(--ink-3); background: var(--bg-2); border-radius: 6px; padding: 2px 7px; }
+  .pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .pill.doing { background: #FFF3D6; color: #7A5A12; } .pill.done { background: var(--ok-soft); color: var(--ok); }
+  .task .title input { font: inherit; width: 100%; padding: 4px 8px; border: 1.5px solid var(--red); border-radius: 8px; outline: none; }
+  .del { width: 36px; height: 36px; border-radius: 10px; background: transparent; color: var(--ink-3); display: grid; place-items: center; flex: none; }
+  .del:hover { background: var(--red-soft); color: var(--red-dark); }
+  .empty { text-align: center; color: var(--ink-3); padding: 40px 0; border: 1.5px dashed var(--line); border-radius: 18px; background: rgba(255,255,255,.6); }
+  .empty img { width: 56px; opacity: .35; display: block; margin: 0 auto 10px; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 12px 18px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: 0 12px 30px rgba(0,0,0,.15); transition: .25s; max-width: 90vw; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.err { background: var(--red-dark); color: #fff; } .toast.ok { background: var(--ok); color: #fff; }
+
+  /* Nhật ký request */
+  aside.log { background: var(--dark); color: #FBF7F8; border-radius: 20px; overflow: hidden; position: sticky; top: 16px; box-shadow: 0 18px 40px rgba(42,36,48,.25); }
+  .log-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px; background: #221C27; }
+  .dots { display: flex; gap: 6px; } .dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .dots i:nth-child(1) { background: #FF5F57; } .dots i:nth-child(2) { background: #FEBC2E; } .dots i:nth-child(3) { background: #28C840; }
+  .log-head b { font-size: 14px; margin-left: 6px; }
+  .clear { margin-left: auto; background: var(--dark-2); color: #D9D1DB; font-size: 12px; padding: 6px 10px; border-radius: 8px; }
+  .log p.hint { margin: 0; padding: 10px 16px 0; color: #B9AFBC; font-size: 12px; }
+  .entries { display: flex; flex-direction: column; gap: 8px; max-height: 72vh; overflow: auto; padding: 12px 16px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; scrollbar-width: thin; scrollbar-color: #5A4F5E transparent; }
+  .entries::-webkit-scrollbar { width: 6px; }
+  .entries::-webkit-scrollbar-track { background: transparent; }
+  .entries::-webkit-scrollbar-thumb { background: #5A4F5E; border-radius: 999px; }
+  .entries::-webkit-scrollbar-thumb:hover { background: #E0234E; }
+  .entry { background: var(--dark-2); border-radius: 12px; padding: 10px 12px; border-left: 3px solid #5A5160; animation: pop .2s ease; }
+  .entry.ok { border-left-color: #2FB463; } .entry.bad { border-left-color: #FF6B88; }
+  .entry .top { display: flex; gap: 8px; align-items: center; }
+  .m { font-weight: 600; padding: 1px 7px; border-radius: 6px; font-size: 12px; }
+  .m.GET { background: #2F4A6B; color: #CFE3FF; } .m.POST { background: #2E5A3E; color: #CFF5DC; }
+  .m.PATCH { background: #6B5320; color: #FFE9B8; } .m.DELETE { background: #6B2333; color: #FFD3DD; }
+  .st { margin-left: auto; font-weight: 600; } .st.s2 { color: #8FE3AE; } .st.s4, .st.s5, .st.s0 { color: #FF9FB3; }
+  .entry .url { margin-top: 5px; word-break: break-all; }
+  .entry .sub { margin-top: 4px; color: #B9AFBC; font-size: 12px; word-break: break-word; }
+  .log-empty { color: #8C828F; font-size: 12px; text-align: center; padding: 18px 0; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><img src="nestjs-logo.svg" alt="Logo NestJS"><b>Task <span>App</span></b></div>
+  <span class="status" id="status"><i></i><span>Đang kết nối…</span></span>
+  <div class="conn">
+    <label class="field"><span>API</span><input id="apiBase" value="http://localhost:3000"></label>
+    <label class="field"><span>x-api-key</span><input id="apiKey" placeholder="để trống thử 401" autocomplete="off"></label>
+  </div>
+</div>
+
+<div class="wrap">
+  <main>
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>Công việc của nhóm</h1>
+          <p>Giao diện front-end · dữ liệu lấy từ Task API viết bằng NestJS 12</p>
+        </div>
+        <button class="seed" id="seedBtn" type="button" title="Gửi sẵn vài request POST để có dữ liệu demo">⚡ Tạo dữ liệu mẫu</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="sTotal">0</b><span>Tổng cộng</span></div>
+        <div class="stat"><b id="sDone">0</b><span>Đã xong</span></div>
+        <div class="stat"><b id="sTodo">0</b><span>Đang làm</span></div>
+      </div>
+      <div class="bar"><i id="sBar"></i></div>
+      <div class="pct" id="sPct">Hoàn thành 0%</div>
+    </section>
+
+    <form class="card add" id="addForm">
+      <input id="title" placeholder="Tên công việc, vd: Làm slide thuyết trình" autocomplete="off">
+      <input id="desc" placeholder="Mô tả (không bắt buộc)" autocomplete="off">
+      <button class="btn" type="submit">+ Thêm</button>
+    </form>
+
+    <div class="tools">
+      <div class="tabs" id="tabs">
+        <button type="button" data-done="" class="on">Tất cả</button>
+        <button type="button" data-done="false">Đang làm</button>
+        <button type="button" data-done="true">Đã xong</button>
+      </div>
+      <input class="search" id="search" placeholder="Tìm theo tên (≥ 2 ký tự)" autocomplete="off">
+    </div>
+    <ul class="tasks" id="list"></ul>
+  </main>
+
+  <aside class="log">
+    <div class="log-head"><div class="dots"><i></i><i></i><i></i></div><b>Nhật ký request</b><button class="clear" id="clearLog" type="button">Xóa</button></div>
+    <p class="hint">Mỗi nút bấm là một request HTTP gửi tới NestJS</p>
+    <div class="entries" id="entries"><div class="log-empty">Chưa có request nào</div></div>
+  </aside>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { done: '', q: '' };
+const TRASH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+
+// --- Gửi request tới Task API và ghi vào "Nhật ký request" ---
+async function api(method, path, body) {
+  const headers = {};
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const key = $('apiKey').value.trim();
+  if (method !== 'GET' && key) headers['x-api-key'] = key;   // chỉ route ghi dữ liệu cần chìa khóa
+
+  const url = $('apiBase').value.replace(/\/+$/, '') + path;
+  let res, data = null;
+  try {
+    res = await fetch(url, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+    const text = await res.text();
+    data = text ? JSON.parse(text) : null;
+  } catch (e) {
+    setStatus(false);
+    log(method, path, 0, null, body, 'Không kết nối được. Server đã chạy chưa? (npm run start:dev)');
+    throw new Error('Không kết nối được tới ' + url);
+  }
+  setStatus(true);
+  log(method, path, res.status, res.headers.get('X-Response-Time'), body, res.ok ? null : errorText(data));
+  if (!res.ok) throw new Error(res.status + ' · ' + errorText(data));
+  return data;
+}
+
+// Thông báo lỗi của Nest có thể là chuỗi, mảng, hoặc object (errorFormat: 'grouped')
+function errorText(data) {
+  if (!data) return 'Lỗi không rõ';
+  const m = data.message;
+  let msg = typeof m === 'string' ? m
+    : Array.isArray(m) ? m.join('; ')
+    : m && typeof m === 'object' ? Object.entries(m).map(([k, v]) => k + ': ' + [].concat(v).join(', ')).join('; ')
+    : data.error || 'Lỗi';
+  if (data.errorCode) msg += ' [' + data.errorCode + ']';
+  return msg;
+}
+
+function setStatus(ok) {
+  const s = $('status');
+  s.className = 'status ' + (ok ? 'on' : 'off');
+  s.lastElementChild.textContent = ok ? 'Đã kết nối API' : 'Mất kết nối API';
+}
+
+function log(method, path, status, ms, body, err) {
+  const box = $('entries');
+  box.querySelector('.log-empty')?.remove();
+  const el = document.createElement('div');
+  el.className = 'entry ' + (status >= 200 && status < 300 ? 'ok' : 'bad');
+  const top = document.createElement('div'); top.className = 'top';
+  const m = document.createElement('span'); m.className = 'm ' + method; m.textContent = method;
+  const st = document.createElement('span'); st.className = 'st s' + String(status)[0];
+  st.textContent = (status || 'lỗi mạng') + (ms ? ' · ' + ms : '');
+  top.append(m, st);
+  const u = document.createElement('div'); u.className = 'url'; u.textContent = path;
+  el.append(top, u);
+  if (body !== undefined) { const b = document.createElement('div'); b.className = 'sub'; b.textContent = 'body: ' + JSON.stringify(body); el.append(b); }
+  if (err) { const e = document.createElement('div'); e.className = 'sub'; e.textContent = '→ ' + err; el.append(e); }
+  box.prepend(el);
+}
+
+function toast(msg, ok) {
+  const t = $('toast');
+  t.className = 'toast show ' + (ok ? 'ok' : 'err');
+  t.textContent = msg;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => { t.className = 'toast ' + (ok ? 'ok' : 'err'); }, 3500);
+}
+
+// Thống kê: chỉ tính khi đang xem "Tất cả" và không tìm kiếm
+function stats(tasks) {
+  if (state.done || state.q) return;
+  const done = tasks.filter((t) => t.done).length;
+  const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+  $('sTotal').textContent = tasks.length; $('sDone').textContent = done; $('sTodo').textContent = tasks.length - done;
+  $('sBar').style.width = pct + '%'; $('sPct').textContent = 'Hoàn thành ' + pct + '%';
+}
+
+// --- Vẽ danh sách task ---
+function render(tasks) {
+  stats(tasks);
+  const list = $('list');
+  list.replaceChildren();
+  if (!tasks.length) {
+    const li = document.createElement('li'); li.className = 'empty';
+    const img = document.createElement('img'); img.src = 'nestjs-logo.svg'; img.alt = '';
+    li.append(img, 'Chưa có công việc nào. Thêm một việc ở ô phía trên.');
+    list.append(li); return;
+  }
+  for (const t of tasks) {
+    const li = document.createElement('li');
+    li.className = 'task' + (t.done ? ' done' : '');
+
+    const cb = document.createElement('button');
+    cb.type = 'button'; cb.className = 'check'; cb.textContent = '✓';
+    cb.title = t.done ? 'Bỏ đánh dấu' : 'Đánh dấu đã xong';
+    cb.setAttribute('aria-pressed', String(t.done));
+    cb.onclick = () => updateTask(t.id, { done: !t.done });
+
+    const body = document.createElement('div'); body.className = 'body';
+    const title = document.createElement('div'); title.className = 'title';
+    title.textContent = t.title; title.title = 'Bấm đúp để sửa tên';
+    title.ondblclick = () => editTitle(title, t);
+    body.append(title);
+    if (t.description) { const d = document.createElement('div'); d.className = 'desc'; d.textContent = t.description; body.append(d); }
+    const chips = document.createElement('div'); chips.className = 'chips';
+    for (const text of ['#' + t.id, new Date(t.createdAt).toLocaleString('vi-VN')]) {
+      const c = document.createElement('span'); c.className = 'chip'; c.textContent = text; chips.append(c);
+    }
+    body.append(chips);
+
+    const pill = document.createElement('span');
+    pill.className = 'pill ' + (t.done ? 'done' : 'doing');
+    pill.textContent = t.done ? 'Đã xong' : 'Đang làm';
+
+    const del = document.createElement('button');
+    del.className = 'del'; del.type = 'button'; del.title = 'Xóa'; del.setAttribute('aria-label', 'Xóa công việc #' + t.id);
+    del.innerHTML = TRASH;
+    del.onclick = () => removeTask(t.id);
+
+    li.append(cb, body, pill, del);
+    list.append(li);
+  }
+}
+
+// --- Các thao tác: mỗi hàm = một route của Task API ---
+async function loadTasks() {                       // GET /tasks?done=&q=
+  const p = new URLSearchParams();
+  if (state.done) p.set('done', state.done);
+  if (state.q) p.set('q', state.q);
+  const qs = p.toString();
+  try { render(await api('GET', '/tasks' + (qs ? '?' + qs : ''))); }
+  catch (e) { toast(e.message); }
+}
+
+async function addTask(ev) {                       // POST /tasks
+  ev.preventDefault();
+  const body = { title: $('title').value.trim() };
+  const d = $('desc').value.trim();
+  if (d) body.description = d;
+  try {
+    const t = await api('POST', '/tasks', body);
+    $('title').value = ''; $('desc').value = '';
+    toast('Đã thêm công việc #' + t.id, true);
+    loadTasks();
+  } catch (e) { toast(e.message); }
+}
+
+async function updateTask(id, changes) {           // PATCH /tasks/:id
+  try { await api('PATCH', '/tasks/' + id, changes); }
+  catch (e) { toast(e.message); }
+  loadTasks();
+}
+
+async function removeTask(id) {                    // DELETE /tasks/:id
+  try { await api('DELETE', '/tasks/' + id); toast('Đã xóa công việc #' + id, true); }
+  catch (e) { toast(e.message); }
+  loadTasks();
+}
+
+// Dữ liệu mẫu cho buổi demo: gửi lần lượt các request POST (và PATCH cho việc đã xong)
+const SAMPLE = [
+  { title: 'Học NestJS: Module, Controller, Service', description: 'Bài 0–1', done: true },
+  { title: 'Thêm Validation cho DTO', description: 'Bài 2: ValidationPipe', done: true },
+  { title: 'Bảo vệ route bằng Guard', description: 'Bài 3: x-api-key', done: true },
+  { title: 'Làm slide thuyết trình', description: 'Màu đỏ NestJS, nền sáng' },
+  { title: 'Tập dượt cả nhóm', description: 'Canh đủ 20 phút' },
+  { title: 'Chuẩn bị câu hỏi vấn đáp', description: 'Cô hay "vạch lá tìm sâu"' },
+];
+async function seed() {
+  if (!$('apiKey').value.trim()) { toast('Nhập x-api-key (hoasen-2026) trước khi tạo dữ liệu mẫu'); $('apiKey').focus(); return; }
+  const btn = $('seedBtn'); btn.disabled = true;
+  try {
+    for (const s of SAMPLE) {
+      const body = { title: s.title };
+      if (s.description) body.description = s.description;
+      const t = await api('POST', '/tasks', body);
+      if (s.done) await api('PATCH', '/tasks/' + t.id, { done: true });
+    }
+    toast('Đã tạo ' + SAMPLE.length + ' công việc mẫu', true);
+  } catch (e) { toast(e.message); }
+  btn.disabled = false;
+  loadTasks();
+}
+
+function editTitle(el, t) {
+  const input = document.createElement('input');
+  input.value = t.title;
+  el.replaceChildren(input); input.focus(); input.select();
+  let doneEditing = false;
+  const finish = (save) => {
+    if (doneEditing) return; doneEditing = true;
+    const v = input.value.trim();
+    if (save && v !== t.title) updateTask(t.id, { title: v }); else loadTasks();
+  };
+  input.onkeydown = (e) => { if (e.key === 'Enter') finish(true); if (e.key === 'Escape') finish(false); };
+  input.onblur = () => finish(true);
+}
+
+// --- Gắn sự kiện ---
+$('addForm').onsubmit = addTask;
+$('seedBtn').onclick = seed;
+$('tabs').onclick = (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  for (const x of $('tabs').children) x.classList.toggle('on', x === b);
+  state.done = b.dataset.done; loadTasks();
+};
+let searchTimer;
+$('search').oninput = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { state.q = $('search').value.trim(); loadTasks(); }, 400);
+};
+$('clearLog').onclick = () => { $('entries').innerHTML = '<div class="log-empty">Chưa có request nào</div>'; };
+$('apiBase').onchange = loadTasks;
+
+// Nhớ chìa khóa và địa chỉ API trong trình duyệt này (chỉ cho tiện khi demo)
+try {
+  const saved = JSON.parse(localStorage.getItem('task-ui') || '{}');
+  if (saved.apiBase) $('apiBase').value = saved.apiBase;
+  if (saved.apiKey) $('apiKey').value = saved.apiKey;
+} catch {}
+for (const id of ['apiBase', 'apiKey']) {
+  $(id).addEventListener('change', () => {
+    try { localStorage.setItem('task-ui', JSON.stringify({ apiBase: $('apiBase').value, apiKey: $('apiKey').value })); } catch {}
+  });
+}
+
+loadTasks();
+</script>
+</body>
+</html>

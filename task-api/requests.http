@@ -1,0 +1,229 @@
+### File test API — dùng với extension "REST Client" trong VS Code
+### Bấm chữ "Send Request" phía trên mỗi request để gửi.
+@base = http://localhost:3000
+@key = hoasen-2026
+
+### ===== DỮ LIỆU MẪU CHO DEMO (gửi lần lượt S1 → S6 sau mỗi lần khởi động lại server) =====
+
+### S1
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: {{key}}
+
+{ "title": "Học NestJS: Module, Controller, Service", "description": "Bài 0–1" }
+
+### S2
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: {{key}}
+
+{ "title": "Thêm Validation cho DTO", "description": "Bài 2: ValidationPipe" }
+
+### S3
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: {{key}}
+
+{ "title": "Làm slide thuyết trình", "description": "Màu đỏ NestJS, nền sáng" }
+
+### S4
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: {{key}}
+
+{ "title": "Tập dượt cả nhóm", "description": "Canh đủ 20 phút" }
+
+### S5. Đánh dấu task 1 đã xong
+PATCH {{base}}/tasks/1
+Content-Type: application/json
+x-api-key: {{key}}
+
+{ "done": true }
+
+### S6. Đánh dấu task 2 đã xong
+PATCH {{base}}/tasks/2
+Content-Type: application/json
+x-api-key: {{key}}
+
+{ "done": true }
+
+### 1. Tạo task thứ nhất
+POST {{base}}/tasks
+x-api-key: {{key}}
+Content-Type: application/json
+
+{
+  "title": "Học NestJS",
+  "description": "Làm xong Bài 1"
+}
+
+### 2. Tạo task thứ hai
+POST {{base}}/tasks
+x-api-key: {{key}}
+Content-Type: application/json
+
+{
+  "title": "Làm slide thuyết trình"
+}
+
+### 3. Xem tất cả
+GET {{base}}/tasks
+
+### 4. Xem task 1
+GET {{base}}/tasks/1
+
+### 5. Sửa task 1: đánh dấu đã xong
+PATCH {{base}}/tasks/1
+x-api-key: {{key}}
+Content-Type: application/json
+
+{
+  "done": true
+}
+
+### 6. Xem task không tồn tại → mong đợi 404
+GET {{base}}/tasks/99
+
+### 7. Xóa task 2
+DELETE {{base}}/tasks/2
+x-api-key: {{key}}
+
+### 8. Xem lại tất cả → chỉ còn task 1
+GET {{base}}/tasks
+
+### ===== Câu hỏi suy nghĩ =====
+
+### 9. id không phải số
+GET {{base}}/tasks/abc
+
+### 10. Tạo task thiếu title
+POST {{base}}/tasks
+x-api-key: {{key}}
+Content-Type: application/json
+
+{}
+
+### ===== BÀI 2: dữ liệu sai → mong đợi 400 Bad Request =====
+
+### 11. title sai kiểu (số thay vì chuỗi)
+POST {{base}}/tasks
+x-api-key: {{key}}
+Content-Type: application/json
+
+{
+  "title": 123
+}
+
+### 12. Gửi thêm thuộc tính lạ
+POST {{base}}/tasks
+x-api-key: {{key}}
+Content-Type: application/json
+
+{
+  "title": "Hợp lệ",
+  "hack": 1
+}
+
+### 13. Cố sửa id
+PATCH {{base}}/tasks/1
+x-api-key: {{key}}
+Content-Type: application/json
+
+{
+  "id": 999
+}
+
+### 14. done sai kiểu
+PATCH {{base}}/tasks/1
+x-api-key: {{key}}
+Content-Type: application/json
+
+{
+  "done": "yes"
+}
+
+### ===== BÀI 3: Guard (chìa khóa x-api-key) =====
+### (Từ bài này các request ghi dữ liệu ở trên đã được thêm dòng x-api-key)
+
+### 15. Tạo task KHÔNG có chìa khóa → mong đợi 401 + thông báo tiếng Việt của bạn
+POST {{base}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Không có chìa khóa"
+}
+
+### 16. Tạo task SAI chìa khóa → mong đợi 403 Forbidden
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: sai-roi
+
+{
+  "title": "Sai chìa khóa"
+}
+
+### 17. Tạo task ĐÚNG chìa khóa → mong đợi 201
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: {{key}}
+
+{
+  "title": "Đúng chìa khóa"
+}
+
+### 18. Xem tất cả KHÔNG cần chìa khóa → mong đợi 200
+GET {{base}}/tasks
+
+### 19. Câu đố: KHÔNG có chìa khóa VÀ body sai → 401 hay 400? Vì sao?
+POST {{base}}/tasks
+Content-Type: application/json
+
+{}
+
+### ===== BÀI 4: Interceptor (đo thời gian) =====
+### Nhìn 2 chỗ: header X-Response-Time trong kết quả + dòng [HTTP] trong terminal start:dev
+
+### 20. Tạo task → mong đợi 201 + header X-Response-Time
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: {{key}}
+
+{
+  "title": "Đo thời gian"
+}
+
+### 21. Xem tất cả → 200 + header X-Response-Time
+GET {{base}}/tasks
+
+### 22. Câu đố A: task 99 không tồn tại → có header X-Response-Time không? terminal có in dòng [HTTP] không?
+GET {{base}}/tasks/99
+
+### 23. Câu đố B: không có chìa khóa → có dòng [HTTP] không? Vì sao?
+POST {{base}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Không key"
+}
+
+### ===== BÀI 7: Standard Schema (Zod) + errorCode =====
+### (gửi S1–S6 ở đầu file trước để có dữ liệu)
+
+### 24. Lọc task đã xong → 200, chỉ task done: true
+GET {{base}}/tasks?done=true
+
+### 25. Lọc task chưa xong → 200
+GET {{base}}/tasks?done=false
+
+### 26. Tìm theo tên → 200, chỉ task có chữ "slide"
+GET {{base}}/tasks?q=slide
+
+### 27. done sai giá trị → 400 "done chỉ nhận true hoặc false"
+GET {{base}}/tasks?done=yes
+
+### 28. Từ khóa quá ngắn → 400 "Từ khóa phải có ít nhất 2 ký tự"
+GET {{base}}/tasks?q=a
+
+### 29. Không tìm thấy → 404 kèm "errorCode": "TASK_NOT_FOUND"
+GET {{base}}/tasks/99
+
