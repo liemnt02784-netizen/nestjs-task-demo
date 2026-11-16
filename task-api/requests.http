@@ -227,3 +227,70 @@ GET {{base}}/tasks?q=a
 ### 29. Không tìm thấy → 404 kèm "errorCode": "TASK_NOT_FOUND"
 GET {{base}}/tasks/99
 
+
+### ===== BÀI 8: Đăng nhập + phân quyền (admin / editor / user) =====
+### Tài khoản: admin/admin123 · editor/editor123 · user/user123
+@admin = hoasen-2026
+@editor = editor-2026
+@user = user-2026
+
+### 30. Đăng nhập đúng → 200 + apiKey
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "username": "editor", "password": "editor123" }
+
+### 31. Đăng nhập sai mật khẩu → 401 LOGIN_FAILED
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "username": "admin", "password": "sai" }
+
+### 32. user tạo task → 201, "createdBy": "Người dùng" (cần làm xong bước 1)
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: {{user}}
+
+{ "title": "Task do user tạo" }
+
+### 33. user sửa task → mong đợi 403 (cần làm xong bước 2–4)
+PATCH {{base}}/tasks/1
+Content-Type: application/json
+x-api-key: {{user}}
+
+{ "done": true }
+
+### 34. editor sửa task → 200
+PATCH {{base}}/tasks/1
+Content-Type: application/json
+x-api-key: {{editor}}
+
+{ "done": true }
+
+### 35. editor xóa task → mong đợi 403 (chỉ admin được xóa)
+DELETE {{base}}/tasks/1
+x-api-key: {{editor}}
+
+### 36. Chìa khóa không tồn tại → mong đợi 401 "Chìa khóa không hợp lệ"
+POST {{base}}/tasks
+Content-Type: application/json
+x-api-key: khong-co-key-nay
+
+{ "title": "abc" }
+
+### 37. Nhật ký hoạt động (AuditInterceptor ghi) → 200
+GET {{base}}/activity
+
+### ===== Upload file (Claude làm, để bạn xem) =====
+### 38. Gửi file .svg → mong đợi 400 FILE_TYPE_NOT_ALLOWED (chỉ nhận png, jpg, gif, webp, pdf)
+### (Upload ảnh thật thì làm trên Task App: bấm 📎 trên một công việc)
+POST {{base}}/tasks/1/attachment
+x-api-key: {{admin}}
+Content-Type: multipart/form-data; boundary=----TaskBoundary
+
+------TaskBoundary
+Content-Disposition: form-data; name="file"; filename="nestjs-logo.svg"
+Content-Type: image/svg+xml
+
+< ../task-ui/nestjs-logo.svg
+------TaskBoundary--

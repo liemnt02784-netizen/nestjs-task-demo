@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đăng nhập · Task App</title>
+<link rel="icon" href="nestjs-logo.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --red: #E0234E; --red-dark: #C01C42; --red-soft: #FCE3E9;
+    --bg: #FBF7F8; --line: #EADFE2; --ink: #221C24; --ink-2: #57505A; --ink-3: #776E7E;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; font-family: 'Be Vietnam Pro', Arial, sans-serif; color: var(--ink); background: var(--bg); display: grid; grid-template-columns: 1.1fr 1fr; }
+  @media (max-width: 860px) { body { grid-template-columns: 1fr; } .art { display: none; } }
+
+  /* Nửa trái: giới thiệu */
+  .art { background: linear-gradient(150deg, #E0234E 0%, #A3163A 100%); color: #fff; padding: 56px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+  .art::before, .art::after { content: ""; position: absolute; border-radius: 50%; background: rgba(255,255,255,.07); }
+  .art::before { width: 420px; height: 420px; right: -140px; top: -120px; }
+  .art::after { width: 300px; height: 300px; left: -100px; bottom: -110px; }
+  .brand { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+  .brand span { width: 52px; height: 52px; border-radius: 50%; background: #FFF7F8; display: grid; place-items: center; }
+  .brand img { width: 34px; }
+  .brand b { font-size: 24px; font-weight: 800; }
+  .pitch { position: relative; z-index: 1; max-width: 460px; }
+  .pitch h1 { font-size: 40px; line-height: 1.15; margin: 0 0 14px; font-weight: 800; }
+  .pitch p { font-size: 16px; line-height: 1.6; color: #FFE1E7; margin: 0; }
+  .feats { list-style: none; padding: 0; margin: 28px 0 0; display: flex; flex-direction: column; gap: 12px; }
+  .feats li { display: flex; gap: 12px; align-items: center; font-size: 15px; }
+  .feats i { font-style: normal; width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.16); display: grid; place-items: center; flex: none; }
+  .foot { position: relative; z-index: 1; font-size: 13px; color: #FFD0DA; }
+
+  /* Nửa phải: form */
+  main { display: grid; place-items: center; padding: 32px 16px; }
+  form { width: 100%; max-width: 380px; }
+  .mobile-brand { display: none; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .mobile-brand img { width: 40px; } .mobile-brand b { font-size: 22px; font-weight: 800; }
+  @media (max-width: 860px) { .mobile-brand { display: flex; } }
+  h2 { font-size: 30px; margin: 0 0 6px; font-weight: 800; }
+  .sub { color: var(--ink-3); margin: 0 0 28px; font-size: 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 16px 0 6px; }
+  .inp { position: relative; }
+  input { width: 100%; font: inherit; font-size: 15px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); outline: none; }
+  input:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-soft); }
+  .eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; cursor: pointer; font: 600 12px 'Be Vietnam Pro', sans-serif; color: var(--ink-3); padding: 6px 8px; border-radius: 8px; }
+  .eye:hover { background: var(--bg); color: var(--ink); }
+  .err { min-height: 20px; margin-top: 12px; color: var(--red-dark); font-size: 13px; font-weight: 600; }
+  .btn { width: 100%; margin-top: 8px; font: inherit; font-weight: 700; font-size: 15px; color: #fff; background: var(--red); border: 0; border-radius: 12px; padding: 14px; cursor: pointer; box-shadow: 0 8px 20px rgba(224,35,78,.3); transition: background .2s, transform .1s; }
+  .btn:hover { background: var(--red-dark); } .btn:active { transform: translateY(1px); } .btn:disabled { opacity: .7; cursor: wait; }
+  .demo { margin-top: 28px; padding: 16px; border: 1px dashed var(--line); border-radius: 14px; background: #fff; }
+  .demo p { margin: 0 0 10px; font-size: 12px; color: var(--ink-3); }
+  .accs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .acc { font: inherit; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px 6px; cursor: pointer; text-align: center; }
+  .acc:hover { border-color: var(--red); }
+  .acc b { display: block; font: 600 13px 'JetBrains Mono', monospace; }
+  .acc small { font-size: 11px; color: var(--ink-3); }
+  .acc.admin b { color: var(--red-dark); } .acc.editor b { color: #7A5A12; } .acc.user b { color: #1F4E80; }
+  .server { margin-top: 18px; font-size: 12px; color: var(--ink-3); text-align: center; }
+  .server code { font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+<section class="art">
+  <div class="brand"><span><img src="nestjs-logo.svg" alt=""></span><b>Task App</b></div>
+  <div class="pitch">
+    <h1>Quản lý công việc của nhóm</h1>
+    <p>Giao diện front-end gọi Task API viết bằng NestJS 12, dữ liệu lưu trong database SQLite.</p>
+    <ul class="feats">
+      <li><i>🔐</i>Đăng nhập, phân quyền admin / editor / user</li>
+      <li><i>📎</i>Đính kèm ảnh hoặc PDF cho từng công việc</li>
+      <li><i>🕒</i>Nhật ký hoạt động: ai đã làm gì, lúc nào</li>
+    </ul>
+  </div>
+  <div class="foot">Demo đề tài "Tìm hiểu về NestJS" · Đại học Hoa Sen</div>
+</section>
+
+<main>
+  <form id="form" novalidate>
+    <div class="mobile-brand"><img src="nestjs-logo.svg" alt=""><b>Task App</b></div>
+    <h2>Đăng nhập</h2>
+    <p class="sub">Chào mừng trở lại! Đăng nhập để quản lý công việc.</p>
+
+    <label for="username">Tên đăng nhập</label>
+    <input id="username" autocomplete="username" autofocus>
+
+    <label for="password">Mật khẩu</label>
+    <div class="inp">
+      <input id="password" type="password" autocomplete="current-password">
+      <button class="eye" type="button" id="eye" aria-label="Hiện mật khẩu">Hiện</button>
+    </div>
+
+    <div class="err" id="err" role="alert"></div>
+    <button class="btn" id="submit" type="submit">Đăng nhập</button>
+
+    <div class="demo">
+      <p>Tài khoản demo, bấm để điền sẵn:</p>
+      <div class="accs">
+        <button type="button" class="acc admin" data-u="admin" data-p="admin123"><b>admin</b><small>Quản trị viên</small></button>
+        <button type="button" class="acc editor" data-u="editor" data-p="editor123"><b>editor</b><small>Biên tập viên</small></button>
+        <button type="button" class="acc user" data-u="user" data-p="user123"><b>user</b><small>Người dùng</small></button>
+      </div>
+    </div>
+    <p class="server">Server API: <code id="apiLabel"></code></p>
+  </form>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+// Dùng chung chỗ lưu với trang chính: { apiBase, session }
+let store = {};
+try { store = JSON.parse(localStorage.getItem('task-ui') || '{}'); } catch {}
+const apiBase = (store.apiBase || 'http://localhost:3000').replace(/\/+$/, '');
+$('apiLabel').textContent = apiBase;
+
+// Đã đăng nhập rồi thì vào thẳng trang chính
+if (store.session?.apiKey) location.replace('index.html');
+
+for (const b of document.querySelectorAll('.acc')) b.onclick = () => { $('username').value = b.dataset.u; $('password').value = b.dataset.p; $('err').textContent = ''; };
+$('eye').onclick = () => {
+  const show = $('password').type === 'password';
+  $('password').type = show ? 'text' : 'password';
+  $('eye').textContent = show ? 'Ẩn' : 'Hiện';
+};
+
+// POST /auth/login → { apiKey, user }
+$('form').onsubmit = async (ev) => {
+  ev.preventDefault();
+  $('err').textContent = '';
+  $('submit').disabled = true; $('submit').textContent = 'Đang đăng nhập…';
+  try {
+    const res = await fetch(apiBase + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: $('username').value.trim(), password: $('password').value }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const m = data.message;
+      throw new Error(typeof m === 'string' ? m : Object.values(m || {}).flat()[0] || 'Đăng nhập thất bại');
+    }
+    try { localStorage.setItem('task-ui', JSON.stringify({ ...store, apiBase, session: data })); } catch {}
+    location.replace('index.html');
+  } catch (e) {
+    $('err').textContent = e.message === 'Failed to fetch' ? 'Không kết nối được server. Đã chạy npm run start:dev chưa?' : e.message;
+    $('submit').disabled = false; $('submit').textContent = 'Đăng nhập';
+  }
+};
+</script>
+</body>
+</html>

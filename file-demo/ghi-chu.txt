@@ -1,0 +1,1 @@
+File .txt dùng để thử lỗi 400: chỉ nhận ảnh hoặc PDF.
